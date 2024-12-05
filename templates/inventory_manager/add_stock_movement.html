@@ -1,0 +1,49 @@
+{% extends "extends/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Add Stock Movement</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Product Selection -->
+        <div class="form-group mb-4">
+            <label for="product">Product</label>
+            <select class="form-control" id="product" name="product" required>
+                <option value="">Select product</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" {% if selected_product and selected_product.id == product.id %}selected{% endif %}>
+                    {{ product.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Quantity Issued -->
+        <div class="form-group mb-4">
+            <label for="quantityIssued">Quantity Issued</label>
+            <input type="number" class="form-control" id="quantityIssued" name="quantity_issued" placeholder="Enter quantity issued" required>
+        </div>
+
+        <!-- Quantity Returned -->
+        <div class="form-group mb-4">
+            <label for="quantityReturned">Quantity Returned</label>
+            <input type="number" class="form-control" id="quantityReturned" name="quantity_returned" placeholder="Enter quantity returned">
+        </div>
+
+        <!-- Location Received -->
+        <div class="form-group mb-4">
+            <label for="locationReceived">Location Received</label>
+            <input type="text" class="form-control" id="locationReceived" name="location_received" placeholder="Enter location received" required>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Add Stock Movement</button>
+    </form>
+
+    <!-- Back Button -->
+    <div class="text-center mt-4">
+        <a href="{% url 'inventory_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

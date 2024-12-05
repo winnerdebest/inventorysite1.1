@@ -1,0 +1,104 @@
+{% extends 'extends/sbase.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="text-center mb-4"> Welcome Supervisor {{ user.username}} </h1>
+
+    <div class="row">
+        <!-- Sidebar with Requests -->
+        <div class="col-lg-4 mb-4">
+            <!-- Pending Requests Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Pending Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_requests %}
+                        <ul class="list-group">
+                            {% for request in pending_requests %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ request.product.name }}</strong><br>
+                                        Quantity: {{ request.quantity_received }}<br>
+                                        <small class="text-muted">{{ request.date_received|date:"F j, Y" }}</small>
+                                    </div>
+                                    <span class="badge bg-warning text-white">Pending</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No pending requests.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Approved Requests Section -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Approved Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if approved_requests %}
+                        <ul class="list-group">
+                            {% for request in approved_requests %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ request.product.name }}</strong><br>
+                                        Quantity: {{ request.quantity_received }}<br>
+                                        Approved By: {{ request.approved_by.username }}<br>
+                                        <small class="text-muted">{{ request.approved_date|date:"F j, Y" }}</small>
+                                    </div>
+                                    <span class="badge bg-success text-white">Approved</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No approved requests.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Product List Section -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Product List by Category</h5>
+                </div>
+                <div class="card-body">
+                    {% for category in categories %}
+                        <div class="mb-4">
+                            <h6 class="text-primary">Category: {{ category.name }}</h6>
+                            <div class="row">
+                                {% for product in category.product_set.all %}
+                                    <div class="col-md-6 col-lg-4 mb-4">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body text-center">
+                                                {% if product.image %}
+                                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-height: 150px;">
+                                                {% else %}
+                                                    <div class="text-muted mb-3">No Image</div>
+                                                {% endif %}
+                                                <h6 class="card-title">{{ product.name }}</h6>
+                                                <p class="card-text text-muted">Stock Balance: {{ product.stock_balance }}</p>
+                                                <p class="card-text text-muted">Price: NGN {{ product.unit_price }}</p>
+                                            </div>
+                                            <div class="card-footer text-center">
+                                                <a href="{% url 'request_purchase' product.id %}" class="btn btn-outline-primary btn-sm">
+                                                    Request Purchase
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="col-12 text-center text-muted">No products available in this category.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

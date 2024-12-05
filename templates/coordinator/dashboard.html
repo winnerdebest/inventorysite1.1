@@ -1,0 +1,62 @@
+
+{% extends 'extends/base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="text-center mb-5">Coordinators Dashboard</h1>
+
+    <!-- Products Section (Grouped by Category) -->
+    <h2 class="mb-4">Products by Category</h2>
+    {% for category in categories %}
+        <div class="category-section mb-5">
+            <h3 class="text-primary">{{ category.name }}</h3>
+            <div class="row">
+                {% for product in category.product_set.all %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <!-- Product Image -->
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <img src="https://via.placeholder.com/150" class="card-img-top" alt="Placeholder Image" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="mb-1"><strong>Stock Balance:</strong> {{ product.stock_balance }}</p>
+                                <p class="mb-1"><strong>Closing Stock Value:</strong> NGN{{ product.closing_stock_value }}</p>
+                                
+                                <!-- View Purchases Button -->
+                                <div class="text-center mt-3">
+                                    <a href="#" class="btn btn-outline-primary btn-sm">Product Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">No products available in this category.</p>
+                {% endfor %}
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-muted">No categories available.</p>
+    {% endfor %}
+    
+
+    <!-- Vendors Section -->
+    <h2 class="mb-4">Vendors</h2>
+    <div class="list-group mb-5">
+        {% for vendor in vendors %}
+            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center shadow-sm">
+                <div>
+                    <h5 class="mb-1">{{ vendor.name }}</h5>
+                    <p class="mb-1">{{ vendor.contact_info }}</p>
+                    <small class="text-muted">Created on: {{ vendor.created_at|date:"F j, Y" }}</small>
+                </div>
+                <span class="badge bg-primary rounded-pill">Vendor</span>
+            </div>
+        {% empty %}
+            <p class="text-muted">No vendors available.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

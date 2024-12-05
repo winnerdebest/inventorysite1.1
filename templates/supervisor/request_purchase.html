@@ -1,0 +1,44 @@
+{% extends "extends/sbase.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Request Purchase for {{ product.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Vendor Selection -->
+                        <div class="form-group mb-3">
+                            <label for="vendor" class="form-label">Vendor:</label>
+                            <select name="vendor" id="vendor" class="form-select" required>
+                                {% for vendor in vendors %}
+                                    <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                                {% empty %}
+                                    <option value="">No vendors available</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Quantity Input -->
+                        <div class="form-group mb-3">
+                            <label for="quantity_received" class="form-label">Quantity Received:</label>
+                            <input type="number" name="quantity_received" id="quantity_received" class="form-control" placeholder="Enter quantity" min="1" required>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Submit Request</button>
+                            <a href="{% url 'supervisor_dashboard' %}" class="btn btn-secondary btn-lg">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

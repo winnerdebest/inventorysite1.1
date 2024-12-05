@@ -1,0 +1,24 @@
+{% extends 'extends/pbase.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center">Edit Product: {{ product.name }}</h1>
+    <form method="post">
+        {% csrf_token %}    
+        <div class="form-group">
+            <label for="unitPrice">Unit Price</label>
+            <input type="number" step="0.01" class="form-control" id="unitPrice" name="unit_price" value="{{ product.unit_price }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="stockIncrement">Add to Stock Balance</label>
+            <input type="number" class="form-control" id="stockIncrement" name="stock_increment" value="0" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Product</button>
+    </form>
+    <div class="text-center mt-4">
+        <a href="{% url "procurement_dashboard" %}" class="btn btn-secondary">Back to Products</a>
+    </div>
+</div>
+{% endblock %}
