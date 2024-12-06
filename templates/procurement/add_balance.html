@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="text-center">Edit Product: {{ product.name }}</h1>
+    <h1 class="text-center">New Supply: {{ product.name }}</h1>
     <form method="post">
         {% csrf_token %}    
         <div class="form-group">
@@ -15,7 +15,7 @@
             <input type="number" class="form-control" id="stockIncrement" name="stock_increment" value="0" required>
         </div>
 
-        <button type="submit" class="btn btn-primary">Update Product</button>
+        <button type="submit" class="btn btn-danger">Update Product</button>
     </form>
     <div class="text-center mt-4">
         <a href="{% url "procurement_dashboard" %}" class="btn btn-secondary">Back to Products</a>

@@ -37,8 +37,12 @@ def login_view(request):
             login(request, user)
             
             # Redirect based on group
-            if user.groups.filter(name="General manager").exists():
-                return redirect('general_manager_dashboard')  # Replace with the actual view name
+            if user.groups.filter(name="General Manager").exists():
+                return redirect('gm_dashboard')  # Replace with the actual view name
+            elif user.groups.filter(name="Coordinators").exists():
+                return redirect('coordinator_dashboard')
+            elif user.groups.filter(name="Internal Control").exists():
+                return redirect('internal_control')            
             elif user.groups.filter(name="Inventory Manager").exists():
                 return redirect('inventory_dashboard')
             elif user.groups.filter(name="Procurement").exists():
@@ -98,29 +102,8 @@ def product_purchases(request, product_id):
     edit_history_entries = product.productedithistory_set.filter(is_approved=False)
 
     if request.method == "POST":
-        # Approving a purchase
-        if 'purchase_id' in request.POST:
-            purchase_id = request.POST.get('purchase_id')
-            purchase = get_object_or_404(Purchase, id=purchase_id)
-
-            if not purchase.is_approved:  # Approve the purchase only if not already approved
-                with transaction.atomic():  # Ensure atomicity of operations
-                    # Update purchase approval
-                    purchase.is_approved = True
-                    purchase.approved_by = request.user
-                    purchase.save()
-
-                    # Perform stock calculations
-                    product.stock_balance -= purchase.quantity_received
-                    product.closing_stock_value = product.stock_balance * product.unit_price
-                    product.save()  # Save updated stock values
-
-                messages.success(request, "Purchase approved successfully!")
-            else:
-                messages.warning(request, "This purchase is already approved.")
-
         # Approving ProductEditHistory entries
-        elif 'history_id' in request.POST:
+        if 'history_id' in request.POST:
             history_id = request.POST.get('history_id')
             history = get_object_or_404(ProductEditHistory, id=history_id)
 
@@ -291,8 +274,8 @@ def supervisor_dashboard(request):
     categories = Category.objects.prefetch_related('product_set').all()
 
     # Filter purchases by approval status and supervisor
-    pending_requests = Purchase.objects.filter(supervisor=request.user, is_approved=False)
-    approved_requests = Purchase.objects.filter(supervisor=request.user, is_approved=True)
+    pending_requests = Purchase.objects.filter(supervisor=request.user, gm_approved=False)
+    approved_requests = Purchase.objects.filter(supervisor=request.user, gm_approved=True)
 
 
     
@@ -322,8 +305,7 @@ def request_purchase(request, product_id):
             product=product,  # Associate the product with the purchase
             supervisor=request.user,  # Associate the logged-in supervisor
             vendor_id=vendor_id,  # Get the selected vendor
-            quantity_received=quantity_received,  # Set the received quantity
-            is_approved=False  # Set approval status to false by default
+            quantity_received=quantity_received,  # Set the received quantity# Set approval status to false by default
         )
         
         purchase.save()  # Save the purchase request
@@ -406,6 +388,7 @@ def procurement_edit_product(request, product_id):
             ProductEditHistory.objects.create(
                 product=product,
                 old_stock_balance=product.stock_balance,
+
                 new_stock_balance=product.stock_balance + stock_increment,
                 old_unit_price=product.unit_price,
                 new_unit_price=unit_price,
@@ -423,7 +406,7 @@ def procurement_edit_product(request, product_id):
 
 #Coordinators Dashboard
 @login_required
-@role_required('Procurement')
+@role_required('Coordinators')
 def coordinator_dashboard(request):
     categories = Category.objects.prefetch_related('product_set').all()
     vendors = Vendor.objects.all()
@@ -436,3 +419,127 @@ def coordinator_dashboard(request):
         'purchases': purchases,
     }
     return render(request, 'coordinator/dashboard.html', context)
+
+@login_required
+@role_required('Coordinators')
+def coordinator_approve(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    purchases = Purchase.objects.filter(product=product).select_related('vendor')
+
+    if 'purchase_id' in request.POST:
+        purchase_id = request.POST.get('purchase_id')
+        purchase = get_object_or_404(Purchase, id=purchase_id)
+
+        if not purchase.coordinator_approved:  # Approve only if not already approved by the Coordinator
+            with transaction.atomic():  # Ensure atomicity
+                purchase.coordinator_approved = True
+                purchase.coordinator_approver = request.user
+                purchase.save()
+
+            messages.success(request, "Purchase approved by Coordinator successfully!")
+        else:
+            messages.warning(request, "This purchase is already approved by the Coordinator.")
+
+        return redirect('coordinator_approve', product_id=product_id)
+
+    context = {
+        'product': product,
+        'purchases': purchases,
+    }
+    return render(request, 'coordinator/approve.html', context)
+        
+
+@login_required
+@role_required('General Manager')
+def gm_dashboard(request):
+    categories = Category.objects.prefetch_related('product_set').all()
+    vendors = Vendor.objects.all()
+    purchases = Purchase.objects.select_related('product', 'vendor').all()
+    movements = StockMovement.objects.select_related('product').all()
+
+    context = {
+        'categories': categories,
+        'vendors': vendors,
+        'purchases': purchases,
+        'movements': movements,
+    }
+    return render(request, 'GM/dashboard.html', context)
+
+
+
+@login_required
+@role_required('General Manager')
+def gm_approve(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    purchases = Purchase.objects.filter(product=product).select_related('vendor')
+    stock_movements = StockMovement.objects.filter(product=product)
+
+    # Get unapproved ProductEditHistory entries
+    edit_history_entries = product.productedithistory_set.filter(is_approved=False)
+
+    if 'purchase_id' in request.POST:
+        purchase_id = request.POST.get('purchase_id')
+        purchase = get_object_or_404(Purchase, id=purchase_id)
+
+        if purchase.coordinator_approved and not purchase.gm_approved:  # Ensure Coordinator approved first
+            with transaction.atomic():  # Ensure atomicity
+                purchase.gm_approved = True
+                purchase.gm_approver = request.user
+                purchase.save()
+
+                # Perform stock calculations after final GM approval
+                product.stock_balance -= purchase.quantity_received
+                product.closing_stock_value = product.stock_balance * product.unit_price
+                product.save()
+
+            messages.success(request, "Purchase fully approved by General Manager!")
+        elif not purchase.coordinator_approved:
+            messages.warning(request, "Coordinator approval is required before GM approval.")
+        else:
+            messages.warning(request, "This purchase is already approved by the General Manager.")
+
+        return redirect('gm_approve', product_id=product_id)
+
+    context = {
+        'product': product,
+        'purchases': purchases,
+        'stock_movements': stock_movements,
+    }
+    return render(request, 'gm/detail.html', context)
+
+
+
+
+
+@login_required
+@role_required('Internal Control')
+def internal_control(request):
+    categories = Category.objects.prefetch_related('product_set').all()
+    vendors = Vendor.objects.all()
+    purchases = Purchase.objects.select_related('product', 'vendor').all()
+    movements = StockMovement.objects.select_related('product').all()
+
+    context = {
+        'categories': categories,
+        'vendors': vendors,
+        'purchases': purchases,
+        'movements': movements,
+    }
+    return render(request, 'internal_control/dashboard.html', context)
+
+
+def internal_details(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    purchases = Purchase.objects.filter(product=product).select_related('vendor')
+    stock_movements = StockMovement.objects.filter(product=product)
+
+    # Get unapproved ProductEditHistory entries
+    edit_history_entries = product.productedithistory_set.filter(is_approved=False)
+
+    context = {
+        'product': product,
+        'purchases': purchases,
+        'stock_movements': stock_movements,
+    }
+    return render(request, 'internal_control/detail.html', context)
+

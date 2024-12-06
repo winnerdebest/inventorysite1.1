@@ -67,10 +67,19 @@ class Purchase(models.Model):
     quantity_received = models.PositiveIntegerField()
     date_received = models.DateTimeField(auto_now_add=True)
     amount_received = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Unit price * quantity_received
-    is_approved = models.BooleanField(default=False)
     approved_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)  # Field to track the user who approved the purchase
     supervisor = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='supervisor_purchases')  #
 
+
+    coordinator_approved = models.BooleanField(default=False)
+    gm_approved = models.BooleanField(default=False)
+
+    coordinator_approver = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name='coordinator_approvals'
+    )
+    gm_approver = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name='gm_approvals'
+    )
 
 def __str__(self):
         return f"Purchase of {self.quantity_received} {self.product.name} from {self.vendor.name} on {self.date_received}"

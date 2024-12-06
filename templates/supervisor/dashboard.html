@@ -62,13 +62,13 @@
         <!-- Main Product List Section -->
         <div class="col-lg-8">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-danger text-white">
                     <h5 class="mb-0">Product List by Category</h5>
                 </div>
                 <div class="card-body">
                     {% for category in categories %}
                         <div class="mb-4">
-                            <h6 class="text-primary">Category: {{ category.name }}</h6>
+                            <h6 class="text-danger">Category: {{ category.name }}</h6>
                             <div class="row">
                                 {% for product in category.product_set.all %}
                                     <div class="col-md-6 col-lg-4 mb-4">
@@ -84,7 +84,7 @@
                                                 <p class="card-text text-muted">Price: NGN {{ product.unit_price }}</p>
                                             </div>
                                             <div class="card-footer text-center">
-                                                <a href="{% url 'request_purchase' product.id %}" class="btn btn-outline-primary btn-sm">
+                                                <a href="{% url 'request_purchase' product.id %}" class="btn btn-outline-danger btn-sm">
                                                     Request Purchase
                                                 </a>
                                             </div>

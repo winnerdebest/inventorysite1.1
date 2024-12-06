@@ -30,6 +30,13 @@ urlpatterns = [
     path('procurement_dashboard/', views.procurement_dashboard, name='procurement_dashboard'),
     # Coordinators URLS
     path('coordinator_dashboard/', views.coordinator_dashboard, name='coordinator_dashboard'),
+    path('product/<int:product_id>/', views.coordinator_approve, name='coordinator_approve'),
+
+
+    path('gm_dashboard/', views.gm_dashboard, name='gm_dashboard'),
+    path('gm_approve/<int:product_id>/', views.gm_approve, name='gm_approve'),
+    path('internal_control/', views.internal_control, name="internal_control"),
+    path('internal_details/<int:product_id>/', views.internal_details, name="internal_details")
 
 
 

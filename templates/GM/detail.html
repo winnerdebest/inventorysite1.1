@@ -1,5 +1,4 @@
-{% extends 'extends/base.html' %}
-
+{% extends "extends/mbase.html" %}
 {% block content %}
 <div class="container my-5">
     <h1 class="text-center mb-4">{{ product.name }} Details</h1>
@@ -16,8 +15,62 @@
             </ul>
         </div>
     </div>
-
-
+    <div class="container mt-4">
+        <h2 class="mb-4 text-center">GM Approval for {{ product.name }}</h2>
+    
+        <!-- Table for Purchases -->
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Quantity Received</th>
+                            <th>Coordinator Approved</th>
+                            <th>GM Approved</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for purchase in purchases %}
+                        <tr>
+                            <td>{{ purchase.vendor }}</td>
+                            <td>{{ purchase.quantity_received }}</td>
+                            <td>
+                                {% if purchase.coordinator_approved %}
+                                    <span class="badge badge-success">Approved</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if purchase.gm_approved %}
+                                    <span class="badge badge-success">Approved</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if purchase.coordinator_approved and not purchase.gm_approved %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="purchase_id" value="{{ purchase.id }}">
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                {% elif not purchase.coordinator_approved %}
+                                    <span class="text-muted">Waiting for Coordinator Approval</span>
+                                {% else %}
+                                    <span class="text-muted">Already Approved</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<br>
+<br>
         <!-- Stock Movements Section -->
         <div class="row">
             <!-- Stock Movements Section -->
@@ -62,6 +115,7 @@
          <thead class="table-light">
              <tr>
                  <th>Old Stock Balance</th>
+                 <th>Quantity Added</th>
                  <th>New Stock Balance</th>
                  <th>Old Unit Price</th>
                  <th>New Unit Price</th>
@@ -74,6 +128,7 @@
              {% for history in product.productedithistory_set.all %}
                  <tr>
                      <td>{{ history.old_stock_balance }}</td>
+                     <td>{{ history.old_stock_balance }}</td>
                      <td>{{ history.new_stock_balance }}</td>
                      <td>NGN{{ history.old_unit_price }}</td>
                      <td>NGN{{ history.new_unit_price }}</td>
@@ -82,11 +137,7 @@
 
                      <td>
                          {% if not history.is_approved %}
-                             <form method="post" class="d-inline">
-                                 {% csrf_token %}
-                                 <input type="hidden" name="history_id" value="{{ history.id }}">
-                                 <button type="submit" class="btn btn-success btn-sm">Recieved</button>
-                             </form>
+                                 <span type="submit" class="text-success">Not Recieved</span>
                          {% else %}
                              <span class="text-success">Recieved by {{ history.approved_by.username }}</span>
                          {% endif %}
@@ -99,57 +150,12 @@
      </table>
 
 
-    <!-- Request Section -->
-    <h2>Request for {{ product.name }}</h2>
-    <table class="table table-hover table-bordered">
-        <thead class="table-light">
-            <tr>
-                <th>Vendor</th>
-                <th>Quantity Received</th>
-                <th>Amount Received</th>
-                <th>Date Received</th>
-                <th>Supervisor</th>
-                <th>Approval</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for purchase in purchases %}
-            <tr>
-                <td>{{ purchase.vendor.name }}</td>
-                <td>{{ purchase.quantity_received }}</td>
-                <td>NGN{{ purchase.amount_received }}</td>
-                <td>{{ purchase.date_received|date:"F j, Y" }}</td>
-                <td>{{ purchase.supervisor.username }}</td>
-                <td>
-                    {% if not purchase.is_approved %}
-                    <form method="post" class="d-inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="purchase_id" value="{{ purchase.id }}">
-                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                    </form>
-                    {% else %}
-                    <span class="text-success">Approved by {{ purchase.approved_by.username }}</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6" class="text-center">No purchases available for this product.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <!-- Edit and Delete Buttons -->
-    <div class="text-center mb-4">
-        <a href="{% url 'add_stock_movement' %}?product={{ product.id }}" class="btn btn-success btn-lg me-2">Add Stock Movement</a>
-        <form action="#" method="post" class="d-inline">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Are you sure you want to delete this product?');">Remove Product</button>
-        </form>
-    </div>
-
     <!-- Back button centered below both sections -->
+
+</div>
     <div class="text-center mt-4">
-        <a href="{% url 'inventory_dashboard' %}" class="btn btn-danger btn-lg">Back to Products</a>
+        <a href="{% url 'gm_dashboard' %}" class="btn btn-primary btn-lg">Back to Products</a>
     </div>
+    <!-- Success and Error Messages -->
 </div>
 {% endblock %}

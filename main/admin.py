@@ -12,7 +12,7 @@ admin.site.register(DieselTracker)
 admin.site.register(ProductEditHistory)
 
 # Fix procurement admin TO add products and unit price(Done)
-# The approval is first the Cordinator is after the supervisor
+# The approval is first the Cordinator is after the supervisor(Done)
 # If the transaction is higher than 1 million send to managing director
 # So design the MD view to be able to view all products and their Transactions
 # So design the GM view to be able to view all products and their Transactions

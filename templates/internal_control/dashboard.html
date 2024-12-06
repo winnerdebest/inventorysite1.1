@@ -1,9 +1,9 @@
 
-{% extends 'extends/base.html' %}
+{% extends 'extends/ibase.html' %}
 
 {% block content %}
 <div class="container my-5">
-    <h1 class="text-center mb-5">Inventory Managers Dashboard</h1>
+    <h1 class="text-center mb-5">Internal Control</h1>
 
     <!-- Products Section (Grouped by Category) -->
     <h2 class="mb-4">Products by Category</h2>
@@ -29,7 +29,7 @@
                                 
                                 <!-- View Purchases Button -->
                                 <div class="text-center mt-3">
-                                    <a href="{% url 'product_purchases' product.id %}" class="btn btn-outline-danger btn-sm">Product Details</a>
+                                    <a href="{% url "internal_details" product.id %}" class="btn btn-danger  btn-sm">Product Details</a>
                                 </div>
                             </div>
                         </div>

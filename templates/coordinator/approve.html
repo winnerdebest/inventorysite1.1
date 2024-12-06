@@ -1,0 +1,59 @@
+{% extends "extends/cbase.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Coordinator Approval for {{ product.name }}</h2>
+
+    <!-- Table for Purchases -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Quantity Received</th>
+                        <th>Coordinator Approved</th>
+                        <th>GM Approved</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases %}
+                    <tr>
+                        <td>{{ purchase.vendor }}</td>
+                        <td>{{ purchase.quantity_received }}</td>
+                        <td>
+                            {% if purchase.coordinator_approved %}
+                                <span class="badge badge-success">Approved</span>
+                            {% else %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if purchase.gm_approved %}
+                                <span class="badge badge-success">Approved</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not purchase.coordinator_approved %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="purchase_id" value="{{ purchase.id }}">
+                                <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                            </form>
+                            {% else %}
+                                <span class="text-muted">Already Approved</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Success and Error Messages -->
+</div>
+{% endblock %}
