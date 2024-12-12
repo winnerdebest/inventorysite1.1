@@ -1,12 +1,20 @@
 from pathlib import Path
 import os
 import dj_database_url
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from cloudinary.utils import cloudinary_url
+
+
 
 
 from environ import Env
 env = Env()
 Env.read_env()
 ENVIRONMENT = env('ENVIRONMENT', default='production')
+USE_CLOUDINARY = env.bool('USE_CLOUDINARY', default=False)
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -83,6 +91,9 @@ DATABASES = {
 }
 
 
+# Fix the images 
+# Fix the Oil and Gas Section
+
 POSTGRESS_LOCALLY = False
 if ENVIRONMENT == 'production' or POSTGRESS_LOCALLY == True:
         DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
@@ -119,11 +130,31 @@ USE_I18N = True
 USE_TZ = True
 
 
+
+
+# Cloudinary Settings
+
+if ENVIRONMENT == 'production' or USE_CLOUDINARY:
+    # Cloudinary configuration
+    CLOUDINARY = {
+        'cloud_name': env('CLOUDINARY_CLOUD_NAME'),
+        'api_key': env('CLOUDINARY_API_KEY'),
+        'api_secret': env('CLOUDINARY_API_SECRET'),
+    }
+
+    cloudinary.config(**CLOUDINARY)
+
+    # Media URL for Cloudinary
+    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY['cloud_name']}/"
+else:
+    # Local media setup
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')#STATIC_ROOT = '/var/www/static'
 STATIC_URL = 'static/'

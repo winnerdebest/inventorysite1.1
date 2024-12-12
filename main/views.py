@@ -1,16 +1,29 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Category, Product, Vendor, Purchase, StockMovement, DieselTracker, ProductEditHistory
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth.models import User
+from .models import Category, Product, Vendor, Purchase, StockMovement, DieselTracker, ProductEditHistory, UserProfile
 from django.db import transaction
-
+from django.contrib.auth.models import Group
 from django.contrib import messages
 from decimal import Decimal
 from .decorators import role_required
 from django.contrib.auth import login
-from .forms import RegisterForm, PurchaseForm
+from .forms import RegisterForm, PurchaseForm 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 
+#Ensure a UserProfile is created whenever a User instance is created.
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.userprofile.save()
 
 # Registration Page
 
@@ -27,6 +40,15 @@ def register(request):
     return render(request, "main/register.html", {"form": form})
 
 
+GROUP_REDIRECTS = {
+    "General Manager": 'gm_dashboard',
+    "Coordinators": 'coordinator_dashboard',
+    "Internal Control": 'internal_control',
+    "Inventory Manager": 'inventory_dashboard',
+    "Procurement": 'procurement_dashboard',
+    "Supervisor": 'supervisor_dashboard',
+}
+
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -34,28 +56,28 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
-            login(request, user)
-            
-            # Redirect based on group
-            if user.groups.filter(name="General Manager").exists():
-                return redirect('gm_dashboard')  # Replace with the actual view name
-            elif user.groups.filter(name="Coordinators").exists():
-                return redirect('coordinator_dashboard')
-            elif user.groups.filter(name="Internal Control").exists():
-                return redirect('internal_control')            
-            elif user.groups.filter(name="Inventory Manager").exists():
-                return redirect('inventory_dashboard')
-            elif user.groups.filter(name="Procurement").exists():
-                return redirect('procurement_dashboard')  # Replace with the actual view name
-            elif user.groups.filter(name="Supervisor").exists():
-                return redirect('supervisor_dashboard')  # Replace with the actual view name
-            else:
-                messages.error(request, "User does not belong to a recognized group.")
+            if not user.is_active:
+                messages.error(request, "Your account is inactive. Contact the admin.")
                 return redirect('login')
+
+            if hasattr(user, 'userprofile') and not user.userprofile.is_approved:
+                messages.error(request, "Your account is pending approval.")
+                return redirect('login')
+
+            login(request, user)
+
+            # Redirect based on group
+            for group_name, redirect_url in GROUP_REDIRECTS.items():
+                if user.groups.filter(name=group_name).exists():
+                    return redirect(redirect_url)
+
+            messages.error(request, "User does not belong to a recognized group.")
+            return redirect('login')
         else:
             messages.error(request, "Invalid username or password.")
     
-    return render(request, 'main/login.html')  # Replace 'login.html' with your login template
+    return render(request, 'main/login.html')
+
 
 @login_required
 def logout_view(request):
@@ -528,6 +550,51 @@ def internal_control(request):
     return render(request, 'internal_control/dashboard.html', context)
 
 
+@login_required
+@role_required('Internal Control')
+def approve_users(request):
+    # Fetch all users, both approved and unapproved
+    all_users = UserProfile.objects.all()
+
+    if request.method == "POST":
+        user_profile_id = request.POST.get("user_profile_id")
+        action = request.POST.get("action")
+
+        # Get the user profile object
+        user_profile = get_object_or_404(UserProfile, id=user_profile_id)
+
+        if action == "approve":
+            user_profile.is_approved = True
+            user_profile.save()
+            messages.success(request, f"User {user_profile.user.username} has been approved.")
+        elif action == "reject":
+            # Set the user profile as unapproved (not deleted)
+            user_profile.is_approved = False
+            user_profile.save()
+            messages.success(request, f"User {user_profile.user.username} has been unapproved.")
+
+        return redirect("approve_users")
+
+    # Pass all users to the template
+    context = {
+        "all_users": [
+            {
+                "id": profile.id,
+                "username": profile.user.username,
+                "email": profile.user.email,
+                "groups": profile.user.groups.all(),
+                "is_approved": profile.is_approved,
+            }
+            for profile in all_users
+        ]
+    }
+
+    return render(request, "internal_control/approve.html", context)
+
+
+
+@login_required
+@role_required('Internal Control') 
 def internal_details(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     purchases = Purchase.objects.filter(product=product).select_related('vendor')

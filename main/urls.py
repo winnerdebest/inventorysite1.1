@@ -35,6 +35,8 @@ urlpatterns = [
 
     path('gm_dashboard/', views.gm_dashboard, name='gm_dashboard'),
     path('gm_approve/<int:product_id>/', views.gm_approve, name='gm_approve'),
+    # Internal Control
+    path('approve_users/', views.approve_users, name='approve_users'),
     path('internal_control/', views.internal_control, name="internal_control"),
     path('internal_details/<int:product_id>/', views.internal_details, name="internal_details")
 

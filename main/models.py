@@ -2,6 +2,15 @@ from django.db import models
 from decimal import Decimal 
 from django.conf import settings
 from django.contrib.auth.models import User
+from cloudinary.models import CloudinaryField
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.user.username
 
 # Category Model
 class Category(models.Model):
@@ -20,7 +29,12 @@ class Product(models.Model):
     closing_stock_value = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     stock_balance = models.PositiveIntegerField(default=0, null=True) # Remaining stock
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to='product_images/', null=True, blank=True)
+    if settings.USE_CLOUDINARY:
+        image = CloudinaryField('product_images', transformation=[
+                {'width': 800, 'height': 800, 'crop': 'limit', 'quality': 'auto', 'fetch_format': 'webp'}
+            ], default='static/default_image.jpg')
+    else:
+        image = models.ImageField(upload_to='product_images/', blank=True, null=True)
 
     
     def save(self, *args, **kwargs):
