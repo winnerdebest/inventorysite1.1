@@ -1,0 +1,75 @@
+{% extends 'extends/sbase.html' %} {% block content %}
+<div class="container my-5">
+  <h1 class="text-center mb-4">Search Products & Requests</h1>
+
+  <!-- Search Form -->
+  <form method="get" action="{% url 'search_products' %}" class="mb-4">
+    <div class="input-group">
+      <input
+        type="text"
+        name="q"
+        value="{{ query }}"
+        class="form-control"
+        placeholder="Search by Product Name, Category or Request ID"
+      />
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+  </form>
+
+  <div class="row">
+    <!-- Product Results Section -->
+    <div class="col-lg-12 mb-4">
+      <h5>Product Results</h5>
+      {% if product_results %}
+      <div class="row">
+        {% for product in product_results %}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">{{ product.name }}</h5>
+              <p class="card-text text-muted">
+                <strong>Category:</strong> {{ product.category.name }}<br />
+                <strong>Price:</strong> NGN {{ product.unit_price }}<br />
+                <strong>Stock:</strong> {{ product.stock_balance }}
+              </p>
+              {% if product.image %}
+              <img
+                src="{{ product.image.url }}"
+                alt="{{ product.name }}"
+                class="img-fluid mb-3"
+                style="max-height: 150px"
+              />
+              {% else %}
+              <p class="text-muted">No Image Available</p>
+              {% endif %}
+              <a
+                href="{% url 'request_purchase' product.id %}"
+                class="btn btn-outline-danger btn-sm"
+                >Request Purchase</a
+              >
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <!-- Pagination (if needed) -->
+      <div class="d-flex justify-content-center mt-4">
+        <!-- Replace these placeholders with actual pagination if needed -->
+        <nav aria-label="Product pagination">
+          <ul class="pagination">
+            <li class="page-item">
+              <a class="page-link" href="#">Previous</a>
+            </li>
+            <li class="page-item"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+          </ul>
+        </nav>
+      </div>
+      {% else %}
+      <p>No products found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -88,8 +88,38 @@ def logout_view(request):
 
 # End Of Registration and  Login Page
 
+#Search for supervisors
+@login_required
+@role_required('Supervisor')  # Adjust role if needed
+def search_products(request):
+    query = request.GET.get('q', '')  # Search query
+    product_results = []
 
-#Search Algorithm 
+    if query:
+        # Search for products
+        product_results = Product.objects.filter(
+            name__icontains=query
+        ) | Product.objects.filter(
+            category__name__icontains=query
+        )
+
+    # Fetch all categories for the category dropdown
+    categories = Category.objects.all()
+
+    context = {
+        'query': query,
+        'product_results': product_results,
+        'categories': categories,
+    }
+
+    return render(request, 'supervisor/search_products.html', context)
+
+
+
+
+#Search Algorithm For inventory manager
+@login_required
+@role_required('Inventory Manager')
 def search_purchase(request):
     query = request.GET.get('q', '')
     purchase_results = []
