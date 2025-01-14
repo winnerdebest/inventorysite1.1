@@ -7,6 +7,7 @@ from django.db import transaction
 from django.contrib.auth.models import Group
 from django.contrib import messages
 from decimal import Decimal
+from django.db.models import Q
 from .decorators import role_required
 from django.contrib.auth import login
 from .forms import RegisterForm, PurchaseForm 
@@ -88,6 +89,39 @@ def logout_view(request):
 # End Of Registration and  Login Page
 
 
+#Search Algorithm 
+def search_purchase(request):
+    query = request.GET.get('q', '')
+    purchase_results = []
+    product_results = []
+
+    if query:
+        # Search for purchases
+        purchase_results = Purchase.objects.filter(
+            request_number__icontains=query
+        ) | Purchase.objects.filter(
+            product__name__icontains=query
+        ) | Purchase.objects.filter(
+            product__category__name__icontains=query
+        ) | Purchase.objects.filter(
+            date_received__icontains=query
+        )
+
+        # Search for products
+        product_results = Product.objects.filter(
+            name__icontains=query
+        ) | Product.objects.filter(
+            category__name__icontains=query
+        )
+
+    context = {
+        'query': query,
+        'purchase_results': purchase_results,
+        'product_results': product_results,
+    }
+    return render(request, 'inventory_manager/search.html', context)
+
+
 
 # This is the Inventory managers view
 @login_required
@@ -106,12 +140,6 @@ def inventory_dashboard(request):
     }
     return render(request, 'inventory_manager/dashboard.html', context)
 
-from django.contrib import messages
-from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
-from .models import Product, Purchase, StockMovement, ProductEditHistory
-from .decorators import role_required
 
 @login_required
 @role_required('Inventory Manager')

@@ -5,6 +5,8 @@ urlpatterns = [
     # Login and Log out URLS
     path('', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+
+    path('search/', views.search_purchase, name='search_purchase'),
     
     path('general_manager_dashboard/', views.general_manager_dashboard, name='general_manager_dashboard'),
 

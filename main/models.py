@@ -3,6 +3,9 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth.models import User
 from cloudinary.models import CloudinaryField
+import random
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 
 class UserProfile(models.Model):
@@ -74,7 +77,8 @@ class Vendor(models.Model):
 
 
 # When a new Purchase is made it is subtracted from the opening balance of the product
-# Purchase Model (product bought from vendor)
+
+
 class Purchase(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
@@ -82,8 +86,7 @@ class Purchase(models.Model):
     date_received = models.DateTimeField(auto_now_add=True)
     amount_received = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Unit price * quantity_received
     approved_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)  # Field to track the user who approved the purchase
-    supervisor = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='supervisor_purchases')  #
-
+    supervisor = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='supervisor_purchases')
 
     coordinator_approved = models.BooleanField(default=False)
     gm_approved = models.BooleanField(default=False)
@@ -95,9 +98,22 @@ class Purchase(models.Model):
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name='gm_approvals'
     )
 
-def __str__(self):
+    request_number = models.CharField(max_length=5, unique=True, editable=True)  # New field for the request number
+
+    def __str__(self):
         return f"Purchase of {self.quantity_received} {self.product.name} from {self.vendor.name} on {self.date_received}"
-    
+
+
+# Signal to generate a random request number
+@receiver(pre_save, sender=Purchase)
+def generate_request_number(sender, instance, **kwargs):
+    if not instance.request_number:  # Only generate if request_number is not already set
+        while True:
+            random_number = f"{random.randint(10000, 99999)}"
+            if not Purchase.objects.filter(request_number=random_number).exists():
+                instance.request_number = random_number
+                break
+
 
 # Stock Movement Model (tracking stock issues and returns,)
 # This is also product given to vendors
