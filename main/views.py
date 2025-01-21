@@ -172,7 +172,6 @@ def inventory_dashboard(request):
 
 
 @login_required
-@role_required('Inventory Manager')
 def product_purchases(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     purchases = Purchase.objects.filter(product=product).select_related('vendor')
