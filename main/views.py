@@ -33,8 +33,14 @@ def register(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
-            form.save()  # Saves the user   
-            return redirect("login")  # Redirect to the login page after successful registration
+            form.save()
+            messages.success(request, "Registration successful. Please log in.")
+            return redirect("login")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field.capitalize()}: {error}")  # Show each field's error
+    
     else:
         form = RegisterForm()
     

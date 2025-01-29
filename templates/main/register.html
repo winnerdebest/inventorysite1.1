@@ -58,6 +58,13 @@
             <p>Join us and start your journey</p>
         </div>
         <div class="card-body p-4">
+            {% if messages %}
+            <div class="alert alert-danger" role="alert">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
             <form method="post" action="{% url 'register' %}">
                 {% csrf_token %}
                 <div class="mb-3">
